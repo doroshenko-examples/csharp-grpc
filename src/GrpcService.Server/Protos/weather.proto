@@ -1,11 +1,14 @@
 syntax = "proto3";
 
+import "google/protobuf/timestamp.proto";
+
 option csharp_namespace = "GrpcService.Server";
 
 package weather;
 
 service  WeatherExtractor {
     rpc GetCurrentWeather(GetCurrentWeatherForCityRequest) returns (WeatherResponse);
+    rpc GetCurrentWeatherStream(GetCurrentWeatherForCityRequest) returns (stream WeatherResponse);
 }
 
 enum Units {
@@ -22,4 +25,5 @@ message GetCurrentWeatherForCityRequest {
 message WeatherResponse {
     double temperature = 1;
     double feels_like = 2;
+    google.protobuf.Timestamp timestamp = 3;
 }
