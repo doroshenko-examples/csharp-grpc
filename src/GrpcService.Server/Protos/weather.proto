@@ -9,6 +9,7 @@ package weather;
 service  WeatherExtractor {
     rpc GetCurrentWeather(GetCurrentWeatherForCityRequest) returns (WeatherResponse);
     rpc GetCurrentWeatherStream(GetCurrentWeatherForCityRequest) returns (stream WeatherResponse);
+    rpc GetMultiCurrentWeatherStream(stream GetCurrentWeatherForCityRequest) returns (MultiWeatherResponse);
 }
 
 enum Units {
@@ -26,4 +27,10 @@ message WeatherResponse {
     double temperature = 1;
     double feels_like = 2;
     google.protobuf.Timestamp timestamp = 3;
+    string city = 4;
+    Units units = 5;
+}
+
+message MultiWeatherResponse {
+    repeated WeatherResponse weather = 1;
 }

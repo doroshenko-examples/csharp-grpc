@@ -32,15 +32,18 @@ namespace GrpcService.Server
             {
                 Temperature = weatherData.Main.Temp,
                 FeelsLike = weatherData.Main.FeelsLike,
-                Timestamp = Timestamp.FromDateTime(DateTime.UtcNow)
+                Timestamp = Timestamp.FromDateTime(DateTime.UtcNow),
+                City = request.City,
+                Units = request.Units
             };
         }
 
         public override async Task GetCurrentWeatherStream(GetCurrentWeatherForCityRequest request, IServerStreamWriter<WeatherResponse> responseStream, ServerCallContext context)
         {
-            foreach(var _ in Enumerable.Range(0, 10))
+            foreach (var _ in Enumerable.Range(0, 10))
             {
-                if (context.CancellationToken.IsCancellationRequested) {
+                if (context.CancellationToken.IsCancellationRequested)
+                {
                     _logger.LogWarning("Cancelled task");
                     break;
                 }
@@ -49,11 +52,33 @@ namespace GrpcService.Server
                 {
                     Temperature = weatherData.Main.Temp,
                     FeelsLike = weatherData.Main.FeelsLike,
-                    Timestamp = Timestamp.FromDateTime(DateTime.UtcNow)
+                    Timestamp = Timestamp.FromDateTime(DateTime.UtcNow),
+                    City = request.City,
+                    Units = request.Units
                 };
                 await responseStream.WriteAsync(response);
                 await Task.Delay(1000);
             }
+        }
+
+        public override async Task<MultiWeatherResponse> GetMultiCurrentWeatherStream(IAsyncStreamReader<GetCurrentWeatherForCityRequest> requestStream, ServerCallContext context)
+        {
+            var response = new MultiWeatherResponse{
+                Weather = {}
+            };
+            await foreach(var request in requestStream.ReadAllAsync())
+            {
+                var weatherData = await GetCurrentTemperatureAsync(request);
+                response.Weather.Add(new WeatherResponse
+                {
+                    Temperature = weatherData.Main.Temp,
+                    FeelsLike = weatherData.Main.FeelsLike,
+                    Timestamp = Timestamp.FromDateTime(DateTime.UtcNow),
+                    City = request.City,
+                    Units = request.Units
+                });
+            }
+            return response;
         }
 
         private async Task<WeatherApiResponse> GetCurrentTemperatureAsync(GetCurrentWeatherForCityRequest request)
